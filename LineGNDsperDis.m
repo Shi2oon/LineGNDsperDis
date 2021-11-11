@@ -1,19 +1,10 @@
 function [LN] = LineGNDsperDis(fo)
-% this function calculates the distrubation of dislocations in any 
-% selcted fatures (preferably slip band) and then proceed to cauclate 
-% the contribuation of each dislcaotion type before proceeding to
-% calculate the weighted average angle between the feature and the 
-% the grain mean orienation
-% the input for this folder should be the directory of an xEBSD_v3 file (fo)
-
-% fo is directory of an xEBSD_v3 file
-clc;close all% setting up the plotting preferences
+clc;close all
 set(0,'defaultAxesFontSize',25);       set(0,'DefaultLineMarkerSize',14)
+% fo = 'A:\OneDrive - Nexus365\Work\EBSD Data\20-12-11 DSS Slip\20_12_11_Slips_1_15nA_20kV_XEBSD';
 load(fo,'GND','Data_InputMap','Map_RefID','GrainData',...
-    'Grain_Map_A0_sample','Maps','Map_EBSD_MTEX'); % loading necessary infromation
-    
-%% select the grain in question (you can bypass this but you won't be able 
-% to calculate the angle
+    'Grain_Map_A0_sample','Maps','Map_EBSD_MTEX');
+%%
 if ~exist('Spec','var') && length(GrainData.RefPoint.x)~=1
     s3=subplot(1,1,1);
     imagesc(Data_InputMap.X_axis,Data_InputMap.Y_axis,Map_RefID); hold on
@@ -36,8 +27,9 @@ if ~exist('Spec','var') && length(GrainData.RefPoint.x)~=1
 elseif ~exist('Spec','var')
     Spec = 1;
 end
+% fo = erase(fo,'XEBSD');
 
-%% extract infromation for the line selcted by the user of that specific grain
+%% cut
 LN.onI = num2str(randi(100)); LN.fo=fileparts(fo);    
 LN.fo = fullfile(LN.fo,LN.onI); mkdir(LN.fo)
 A = squeeze(Grain_Map_A0_sample(:,:,Spec,1,1)); A(A==0)=NaN;
@@ -58,7 +50,7 @@ hold off; title ''
 DirSave = fullfile(LN.fo, [LN.onI '_Lined Data.fig']);      saveas(gcf,DirSave);
 DirSave = fullfile(LN.fo, [LN.onI '_Lined Data.tif']);      saveas(gcf,DirSave);     close
 
-%% sort individual dislocation type and catogries to screw and edge
+%%
 LN.MapsGND_screw = zeros(size(GND.total));
 LN.MapsGND_edge  = zeros(size(GND.total));
 for iV=1:length(GND.Sliplabels{Spec})
@@ -74,7 +66,7 @@ for iV=1:length(GND.Sliplabels{Spec})
         LN.MapsGND_edge = LN.MapsGND_edge+reshape(GND.rho(:,iV),length(Data_InputMap.Y_axis),...
             length(Data_InputMap.X_axis));
     else
-        dips('Check the dislcoations types!')
+        dips('What the f**k is wrong with you!')
     end
 end
 save([LN.fo '\' LN.onI '_Line_Data.mat'],'LN');
@@ -103,7 +95,7 @@ end
 LN.DisName = GND.Sliplabels{Spec};
 save([LN.fo '\' LN.onI '_Line_Data.mat'],'LN');
 
-%% plotting the data
+%%
 bar(1:iV,LN.GND_per,'k');
 xticks([1:iV]);      xlabel('Dislocation System'); xlim([0 iV])
 ylabel('% of \rho_{GND}'); 
@@ -159,15 +151,18 @@ grains2=grains(grains.grainSize > 20); % removing noise
 cs = grains2(Spec).CS; % asign crystal system
 ori = grains(Spec).meanOrientation; % grain mean oreination
 r=vector3d.Z; % normal to surface
-% A Bunge orientation is exactly the inverse of an MTEX orientation
-% translates specimen coordinates into Miller indices
 h=inv(ori)*r;
-
 u = h.round;
 u = [u.h u.k u.l];
+dir = [0 0 1];
 for iO=1:1:length(LN.DisName)
+    u = ori.matrix*[1 0 0;0 1 0; 0 0 1]*b(iO,1:3)'; u = u';
+
     % two diretcion .. the angle between tow directions
-    LN.ang(iO) = round(rad2deg(atan2(norm(cross(u,b(iO,1:3))),dot(u,b(iO,1:3)))),0);
+%     LN.ang(iO) = round(rad2deg(atan2(norm(cross(u,b(iO,1:3))),...
+%         dot(u,b(iO,1:3)))),0);
+    LN.ang(iO) = round(rad2deg(atan2(norm(cross(u,dir)),...
+        dot(u,dir))),0);
 end
 save([LN.fo '\' LN.onI '_Line_Data.mat'],'LN');
 
