@@ -1,4 +1,12 @@
 function [LN] = LineGNDsperDis(fo)
+% this function calculates the distrubation of dislocations in any 
+% selcted fatures (preferably slip band) and then proceed to cauclate 
+% the contribuation of each dislcaotion type before proceeding to
+% calculate the weighted average angle between the feature and the 
+% the grain mean orienation
+% the input for this folder should be the directory of an xEBSD_v3 file (fo)
+
+% fo is directory of an xEBSD_v3 file
 clc;close all
 set(0,'defaultAxesFontSize',25);       set(0,'DefaultLineMarkerSize',14)
 % fo = 'A:\OneDrive - Nexus365\Work\EBSD Data\20-12-11 DSS Slip\20_12_11_Slips_1_15nA_20kV_XEBSD';
