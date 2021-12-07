@@ -30,7 +30,7 @@ end
 % fo = erase(fo,'XEBSD');
 
 %% cut
-LN.onI = num2str(randi(100)); LN.fo=fileparts(fo);    
+LN.onI = num2str(randi(100)); LN.fo=fileparts(fo);
 LN.fo = fullfile(LN.fo,LN.onI); mkdir(LN.fo)
 A = squeeze(Grain_Map_A0_sample(:,:,Spec,1,1)); A(A==0)=NaN;
 GND.total(isnan(A))=NaN;
@@ -88,7 +88,7 @@ for i=1:length(LN.x)
 end
 
 for iV=1:length(GND.Sliplabels{Spec})
-	LN.GND_per(iV)  = sum(abs(LN.GNDreal(:,iV)),'all','omitnan')./...
+    LN.GND_per(iV)  = sum(abs(LN.GNDreal(:,iV)),'all','omitnan')./...
         sum(abs(LN.GNDreal),'all')*100;
     LN.GND_real(iV) = sum(LN.GNDreal(:,iV),'all','omitnan');
 end
@@ -98,7 +98,7 @@ save([LN.fo '\' LN.onI '_Line_Data.mat'],'LN');
 %%
 bar(1:iV,LN.GND_per,'k');
 xticks([1:iV]);      xlabel('Dislocation System'); xlim([0 iV])
-ylabel('% of \rho_{GND}'); 
+ylabel('% of \rho_{GND}');
 ylim([0 max([0:5:max(LN.GND_per)+5])]); yticks([0:5:max(LN.GND_per)+5])
 set(gcf,'position',[41 195 1800 600]); box off;grid on
 set(gca,'GridLineStyle','-.')
@@ -108,7 +108,7 @@ saveas(gcf, [LN.fo '\' LN.onI '_GND_Per.tiff']);close
 %%
 bar(1:iV,LN.GND_real,'k');
 xticks([1:iV]);      xlabel('Dislocation System'); xlim([0 iV])
-ylabel('\rho_{GNDs} [m^{-2}]'); 
+ylabel('\rho_{GNDs} [m^{-2}]');
 set(gcf,'position',[41 195 1800 600]); box off;grid on
 set(gca,'GridLineStyle','-.')
 saveas(gcf, [LN.fo '\' LN.onI '_GND_Mag.fig']);
@@ -137,7 +137,7 @@ for iO = 1:length(LN.DisName)
     t(iO,1:3) = Od(4:end);
     clear Od O
 end
-LN.Table = table(b,t,LN.GND_real');
+LN.b = b; LN.t = t; 
 save([LN.fo '\' LN.onI '_Line_Data.mat'],'LN');
 
 %%
@@ -148,22 +148,27 @@ ebsd2 = Map_EBSD_MTEX('indexed'); % removing non indexed points
 %constructing grains
 [grains,ebsd2.grainId,ebsd2.mis2mean]=calcGrains(ebsd2,'angle',5*degree);
 grains2=grains(grains.grainSize > 20); % removing noise
-cs = grains2(Spec).CS; % asign crystal system
-ori = grains(Spec).meanOrientation; % grain mean oreination
-r=vector3d.Z; % normal to surface
-h=inv(ori)*r;
-u = h.round;
-u = [u.h u.k u.l];
+% cs = grains2(Spec).CS; % asign crystal system
+LN.ori = grains2(Spec).meanOrientation; % grain mean oreination
+% r=vector3d.Z; % normal to surface
+% h=inv(ori)*r;
+% u = h.round;
+% u = [u.h; u.k; u.l];
 dir = [0 0 1];
 for iO=1:1:length(LN.DisName)
-    u = ori.matrix*[1 0 0;0 1 0; 0 0 1]*b(iO,1:3)'; u = u';
-
+    u = LN.ori.matrix*[1 0 0;0 1 0; 0 0 1]*LN.b(iO,1:3)'; 
+    
     % two diretcion .. the angle between tow directions
-%     LN.ang(iO) = round(rad2deg(atan2(norm(cross(u,b(iO,1:3))),...
-%         dot(u,b(iO,1:3)))),0);
-    LN.ang(iO) = round(rad2deg(atan2(norm(cross(u,dir)),...
-        dot(u,dir))),0);
+    %     LN.ang(iO) = round(rad2deg(atan2(norm(cross(u,b(iO,1:3))),...
+    %         dot(u,b(iO,1:3)))),0);
+    LN.ang(iO) = round(rad2deg(atan2(norm(cross(u',dir)),...
+        dot(u',dir))),1);
+    if LN.ang(iO) > 90
+        LN.ang(iO) = LN.ang(iO)-90;
+    end
 end
+LN.Table = table(LN.b,LN.t,LN.GND_real',LN.GND_per',LN.ang',...
+    'VariableNames',{'b','t','m-2','%','deg'});
 save([LN.fo '\' LN.onI '_Line_Data.mat'],'LN');
 
 %%
@@ -207,7 +212,7 @@ cc = jet(size(GP,1));
 for i = 1:size(GP,1)
     H(i).FaceColor = 'flat';
     H(i).CData = cc(i,:);
- end
+end
 xlabel('\Phi^{\circ}'); xlim([0 size(GP,2)+1]);
 for iO = 1:size(GP,2)
     OO{iO}=num2str(A(iO));
@@ -216,7 +221,7 @@ xticklabels(OO)
 ylabel('% of \rho_{GND}');
 legend(string(B),'location','best','NumColumns',2)
 box off;grid on; set(gca,'GridLineStyle','-.')
-title(['$\bar{\Phi} = ' num2str(round(sum(A.*Cat)/sum(Cat),0)) ...
+title(['$\bar{\Phi} = ' num2str(round(sum(A.*Cat)/sum(Cat),1)) ...
     '^{\circ}$'],'Interpreter','Latex')
 % saveas(gcf, [LN.fo '\' LN.onI '_GND_Bar.fig']);
 % saveas(gcf, [LN.fo '\' LN.onI '_GND_Bar.tif']);close
