@@ -6,6 +6,9 @@ function [LN] = LineGNDsperDis(fo)
 % the grain mean orienation
 % the input for this folder should be the directory of an xEBSD_v3 file (fo)
 
+% Example
+% LineGNDsperDis('S6_1100_10nA_20kV_XEBSD')
+
 % fo is directory of an xEBSD_v3 file
 clc;close all;
 setMTEXpref('xAxisDirection','west');
@@ -50,7 +53,7 @@ brighten(0.2);
 c = colorbar;        c.Label.String = ['GNDs [log_{10} m^{-2}]'];
 axis image;         axis xy;        s3.YDir='reverse';
 colormap jet;       s3.XDir='reverse';
-title('Select Feature'); %caxis([11 13.8])
+title('Select two (or) points to make a line(s)'); %caxis([11 13.8])
 set(gcf,'position',[30 50 1300 950])
 [LN.x,LN.y,LN.c] = improfile; axis off;
 addScale([1 1 1],[Data_InputMap.XSample(:) Data_InputMap.YSample(:)]);
