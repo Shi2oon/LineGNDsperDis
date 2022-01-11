@@ -7,11 +7,13 @@ function [LN] = LineGNDsperDis(fo)
 % the input for this folder should be the directory of an xEBSD_v3 file (fo)
 
 % fo is directory of an xEBSD_v3 file
-clc;close all
+clc;close all;
+setMTEXpref('xAxisDirection','west');
+setMTEXpref('yAxisDirection','south');
+setMTEXpref('zAxisDirection','intoPlane');
 set(0,'defaultAxesFontSize',25);       set(0,'DefaultLineMarkerSize',14)
-% fo = 'A:\OneDrive - Nexus365\Work\EBSD Data\20-12-11 DSS Slip\20_12_11_Slips_1_15nA_20kV_XEBSD';
-load(fo,'GND','Data_InputMap','Map_RefID','GrainData',...
-    'Grain_Map_A0_sample','Maps','Map_EBSD_MTEX');
+load(fo,'GND','Data_InputMap','Map_RefID','GrainData','Grain_Map_A0_sample',...
+        'Maps','Map_EBSD_MTEX');
 %%
 if ~exist('Spec','var') && length(GrainData.RefPoint.x)~=1
     s3=subplot(1,1,1);
@@ -149,20 +151,14 @@ LN.b = b; LN.t = t;
 save([LN.fo '\' LN.onI '_Line_Data.mat'],'LN');
 
 %%
-setMTEXpref('xAxisDirection','east');
-setMTEXpref('zAxisDirection','intoPlane');
-
 ebsd2 = Map_EBSD_MTEX('indexed'); % removing non indexed points
 %constructing grains
 [grains,ebsd2.grainId,ebsd2.mis2mean]=calcGrains(ebsd2,'angle',5*degree);
 grains2=grains(grains.grainSize > 20); % removing noise
-% cs = grains2(Spec).CS; % asign crystal system
 LN.ori = grains2(Spec).meanOrientation; % grain mean oreination
-% r=vector3d.Z; % normal to surface
-% h=inv(ori)*r;
-% u = h.round;
-% u = [u.h; u.k; u.l];
-dir = [0 0 1];
+dir = round2Miller(LN.ori); %h.round;
+dir = [dir.h; dir.k; dir.l];
+
 for iO=1:1:length(LN.DisName)
     u = LN.ori.matrix*[1 0 0;0 1 0; 0 0 1]*LN.b(iO,1:3)'; 
     
